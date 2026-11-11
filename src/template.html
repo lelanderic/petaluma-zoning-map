@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Petaluma Proposed Zoning Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,500&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Layout: fixed reading panel on the left (what is here + legend), map fills the rest. Single light theme: the map itself is a light document. */
+  --ink:#18222d; --muted:#5a6673; --paper:#eef0ec; --panel:#ffffff; --line:#d5dad3; --accent:#0d5f6e; --accent-soft:#e3f0f1;
+  --body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.45}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.app{display:grid;grid-template-columns:372px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);height:100%}
+header{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+h1{font-size:18px;font-weight:700;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.sub{color:var(--muted);font-size:12.5px}
+.aboutbtn{margin-left:auto;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:6px 12px;cursor:pointer;font-weight:600;font-size:13px;color:var(--accent)}
+.aboutbtn:hover{border-color:var(--accent)}
+dialog{border:1px solid var(--line);border-radius:12px;padding:0;max-width:min(680px,calc(100vw - 32px));color:var(--ink);background:var(--panel);box-shadow:0 12px 40px rgba(0,0,0,.25)}
+dialog::backdrop{background:rgba(24,34,45,.45)}
+.dlg{padding:20px 22px;max-height:80vh;overflow:auto}
+.dlg h2{margin:0 0 4px;font-size:18px}
+.dlg h3{margin:16px 0 4px;font-size:13px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.dlg ul{margin:4px 0 0;padding-left:18px}
+.dlg li{margin:4px 0}
+.dlg p{margin:6px 0}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--paper)}
+.seg button{border:0;background:transparent;padding:6px 12px;cursor:pointer;font-weight:600;font-size:13px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+aside{background:var(--panel);border-right:1px solid var(--line);overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding:14px 14px 18px}
+.card{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:#fbfcfa}
+.card.on{border-color:var(--accent);background:var(--panel);box-shadow:0 1px 0 rgba(13,95,110,.15)}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.zhead{display:flex;gap:10px;align-items:flex-start}
+.chip{flex:none;width:18px;height:18px;border-radius:4px;border:1px solid rgba(0,0,0,.28)}
+.zhead .chip{width:30px;height:30px;border-radius:6px;margin-top:2px}
+.zcode{font-family:var(--mono);font-weight:600;font-size:13px;color:var(--muted)}
+.zname{font-size:17px;font-weight:700;line-height:1.2;margin:0}
+.tag{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:99px;background:var(--accent-soft);color:var(--accent);margin:6px 6px 0 0}
+.card p{margin:8px 0 0}
+dl{margin:10px 0 0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px}
+dt{color:var(--muted)}
+dd{margin:0;font-weight:500;font-variant-numeric:tabular-nums}
+.note{margin-top:10px;padding:8px 10px;border-left:3px solid #c98a00;background:#fff7e0;font-size:12.5px;border-radius:0 6px 6px 0}
+.ovhere{margin-top:10px;padding:8px 10px;border-left:3px solid #3D6FD6;background:#edf3ff;font-size:12.5px;border-radius:0 6px 6px 0}
+.ovhere b{display:block}
+.ref{margin-top:10px;font-size:12px;color:var(--muted)}
+.clear{margin-top:10px;border:1px solid var(--line);background:var(--panel);border-radius:7px;padding:5px 10px;cursor:pointer;font-weight:600;font-size:12.5px}
+.clear:hover{border-color:var(--accent);color:var(--accent)}
+.grp{margin:0}
+.grp h2{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin:0 0 2px;color:var(--ink)}
+.grp h2 button{all:unset;cursor:pointer;display:flex;align-items:center;gap:8px;flex:1;padding:4px 6px;border-radius:6px}
+.grp h2 button:hover{background:var(--paper)}
+.grp h2 .chip{width:12px;height:12px;border-radius:3px}
+.row{display:grid;grid-template-columns:18px 68px 1fr;gap:8px;align-items:center;width:100%;border:0;background:transparent;text-align:left;padding:4px 6px;border-radius:6px;cursor:pointer}
+.row:hover,.row.hot{background:var(--paper)}
+.row.sel{background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.row .code{font-family:var(--mono);font-weight:600;font-size:12px}
+.row .nm{font-size:13px;line-height:1.25}
+.row .sp{font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.04em;margin-left:4px}
+.ovs{display:grid;gap:2px}
+.ovs label{display:flex;align-items:center;gap:8px;padding:3px 6px;border-radius:6px;cursor:pointer;font-size:13px}
+.ovs label:hover{background:var(--paper)}
+.ovs .sw{width:18px;height:12px;border-radius:3px;border:1.5px solid currentColor;background:repeating-linear-gradient(135deg,currentColor 0 1.5px,transparent 1.5px 4px)}
+.fine{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+.fine p{margin:0 0 6px}
+.mapwrap{position:relative;min-width:0;min-height:0;overflow:hidden;background:#efefef}
+#map{position:absolute;inset:0;overflow:hidden;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+#map.dragging{cursor:grabbing}
+#stage{position:absolute;left:0;top:0;width:3300px;height:2550px;transform-origin:0 0;will-change:transform}
+#stage>*{position:absolute;left:0;top:0;width:3300px;height:2550px;max-width:none;pointer-events:none}
+#stage img{-webkit-user-drag:none}
+.lbl{font-family:var(--body);font-weight:600;font-size:12px;fill:#18222d;stroke:#fff;stroke-width:3.5px;paint-order:stroke;stroke-linejoin:round;text-anchor:middle;dominant-baseline:central;letter-spacing:.01em}
+.lbl.water{font-style:italic;font-weight:500;fill:#2a1fc0}
+.lbl.scale{font-size:11px;font-weight:600}
+.lbl.place{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;fill:#18222d}
+.shield rect{fill:#fff;stroke:#18222d;stroke-width:1.5}
+.shield text{font-family:var(--body);font-weight:700;font-size:10.5px;fill:#18222d;text-anchor:middle;dominant-baseline:central}
+.pin circle{fill:none;stroke:#18222d;stroke-width:2.5}
+.pin circle+circle{stroke:#fff;stroke-width:1.2}
+.ctrl{position:absolute;right:12px;top:12px;display:flex;flex-direction:column;gap:6px}
+.ctrl button{width:36px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--panel);font-size:19px;font-weight:600;cursor:pointer;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,.14)}
+.ctrl button:hover{border-color:var(--accent);color:var(--accent)}
+.ctrl .txt{font-size:11px;width:auto;padding:0 6px}
+#tip{position:absolute;z-index:5;pointer-events:none;max-width:290px;background:var(--panel);border:1px solid var(--ink);border-radius:8px;padding:8px 10px;box-shadow:0 4px 14px rgba(0,0,0,.2);font-size:12.5px;display:none}
+#tip .t1{display:flex;gap:8px;align-items:center;font-weight:700;font-size:13.5px}
+#tip .t2{color:var(--muted);margin-top:3px}
+#tip .t3{margin-top:4px;color:#234a9c;font-weight:600}
+#tip .t3.gp{color:#7a4a00}
+.sm{font-weight:400;color:var(--muted);font-size:12px}
+#tip .t4{margin-top:4px;font-size:11px;color:var(--muted)}
+.hint{position:absolute;left:12px;top:12px;max-width:calc(100% - 80px);background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:12px;color:var(--muted);pointer-events:none}
+#loading{position:absolute;inset:0;display:grid;place-items:center;font-weight:600;color:var(--muted);background:#efefef}
+@media (max-width:860px){
+  html,body{height:auto}
+  .app{display:flex;flex-direction:column;height:auto}
+  .mapwrap{height:62vh;min-height:340px;order:2}
+  header{order:1}
+  aside{order:3;border-right:0;border-top:1px solid var(--line);overflow:visible}
+  .seg{margin-left:0}
+  .aboutbtn{margin-left:0}
+}
+@media (prefers-reduced-motion:no-preference){.row,.clear,.seg button{transition:background .12s,color .12s,border-color .12s}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <h1>Petaluma Proposed Zoning Map</h1>
+      <div class="sub">Exhibit C draft of November 9, 2026, made clickable. Unofficial reading aid.</div>
+    </div>
+    <button class="aboutbtn" id="aboutBtn">About &amp; caveats</button>
+    <div class="seg" role="group" aria-label="Map colors">
+      <button id="modeAll" aria-pressed="true">All 37 zones</button>
+      <button id="modeSimple" aria-pressed="false">7 simple groups</button>
+    </div>
+  </header>
+  <aside>
+    <section class="card" id="card" aria-live="polite"></section>
+    <section id="legend" aria-label="Zones"></section>
+    <section class="grp">
+      <h2 style="padding:4px 6px">Overlays</h2>
+      <div class="ovs" id="ovs"></div>
+    </section>
+    <section class="fine">
+      <p>Built from the City's Exhibit C map image and Exhibit B (Amendments in Clean), both dated November 9, 2026. The zone under your pointer is read from the map's colors, so results on very small parcels and along zone edges can be off. Checked against the City's parcel layer, zones and General Plan designations agree on over 99% of land away from zone edges.</p>
+      <p>Street names and label positions come from the City of Petaluma's public GIS street layer. Overlay areas are traced from the Exhibit C overlay page. General Plan land use comes from the City's adopted General Plan 2050 parcel layer. PUD and PCD names come from the City's current zoning layer (2008 ordinance) and may not match the proposal everywhere.</p>
+      <p>This is a draft proposal. For any decision about a property, confirm with the City of Petaluma.</p>
+    </section>
+  </aside>
+  <div class="mapwrap">
+    <div id="map" tabindex="0" aria-label="Zoning map. Drag to move, scroll or pinch to zoom, click a spot for its zone.">
+      <div id="stage">
+        <img id="base" alt="" draggable="false">
+        <canvas id="shade" width="1650" height="1275"></canvas>
+        <canvas id="ovc" width="1650" height="1275"></canvas>
+        <svg id="labels" viewBox="0 0 3300 2550" aria-hidden="true"></svg>
+      </div>
+    </div>
+    <div id="tip"></div>
+    <div class="ctrl">
+      <button id="zin" aria-label="Zoom in">+</button>
+      <button id="zout" aria-label="Zoom out">&minus;</button>
+      <button id="zfit" class="txt" aria-label="Show whole city">Fit</button>
+    </div>
+    <div class="hint" id="hint">Hover for the zone. Click to pin it and see where else it applies.</div>
+    <div id="loading">Loading map…</div>
+  </div>
+</div>
+<dialog id="about" aria-labelledby="aboutT"><div class="dlg">
+<h2 id="aboutT">About this map</h2>
+<p>An unofficial, clickable reading aid for the City of Petaluma's proposed citywide zoning map (Exhibit C, draft dated November 9, 2026). It is not a City product and the zoning it shows has not been adopted. For any decision about a property, confirm with the City of Petaluma Planning Division.</p>
+<h3>Where the information comes from</h3>
+<ul>
+<li><b>Zones</b> are read from the colors of the Exhibit C map image, not from parcel records.</li>
+<li><b>Zone descriptions and standards</b> are short paraphrases of Exhibit B (Amendments in Clean, November 9, 2026). Footnotes and exceptions in the tables are left out.</li>
+<li><b>General Plan land use, street names and PUD/PCD names</b> come from the City's public GIS layers, downloaded November 10, 2026.</li>
+</ul>
+<h3>Known limits</h3>
+<ul>
+<li>Along zone edges and on very small parcels the zone shown can be off by a few map pixels (one pixel is about 12 feet). Away from edges, zones agree with the City's parcel-level General Plan layer on over 99% of land.</li>
+<li>Pointing at a street shows the nearest zone within about 70 feet. Streets themselves are not zoned on this map.</li>
+<li>Overlay areas (flood plain, historic districts, senior mobile home parks, fairgrounds, T6-Open) are traced from the Exhibit C overlay page and are approximate. Four senior mobile home park areas were traced; the ordinance refers to five.</li>
+<li>PUD and PCD names come from the City's current zoning layer (2008 ordinance). They cover about 95% of the proposed PUD and PCD land and may be out of date where districts have changed.</li>
+<li>The map legend labels floodway inside the Central Petaluma Specific Plan as CS-FW. The ordinance text says that land is zoned P-FW.</li>
+<li>The ordinance establishes two zones, R-RR and MU-TC, that do not appear in the map legend.</li>
+<li>For Central Petaluma Specific Plan zones, building standards live in the SmartCode and are referenced here, not summarized.</li>
+<li>The "7 simple groups" view is this map's own grouping, not a classification in the ordinance.</li>
+<li>"Share of map" figures are estimates from pixel counts and leave out streets.</li>
+<li>Street labels and the scale bar are placed by fitting the City's street layer to the map image, so positions are approximate.</li>
+</ul>
+<p style="margin-top:14px"><button class="clear" id="aboutClose" style="margin:0">Close</button></p>
+</div></dialog>
+<script>
+const ZONES=__ZONES__;
+const GROUPS=__GROUPS__;
+const OVERLAYS=__OVERLAYS__;
+const LABELS=__LABELS__;
+const GPN=__GPN__,GPU=__GPU__;
+const PUDN=__PUDN__;
+let GPg=null,PUg=null;
+const PD=new Set(ZONES.map((z,i)=>z.g==='pd'?i+1:0).filter(Boolean));
+
+const W=3300,H=2550,GW=1650,GH=1275,BBOX=[430,30,3290,2510];
+const $=id=>document.getElementById(id);
+const map=$('map'),stage=$('stage'),tip=$('tip'),card=$('card'),svg=$('labels');
+const G=Object.fromEntries(GROUPS.map(g=>[g.k,g]));
+let Z=null,O=null,k=1,tx=0,ty=0,kFit=1,touched=false;
+let simple=false,pinned=null,hoverSet=null,ovOn=new Set();
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const zcol=z=>simple?G[z.g].col:z.col;
+
+/* ---------- legend ---------- */
+function buildLegend(){
+  const el=$('legend');el.innerHTML='';
+  for(const g of GROUPS){
+    const sec=document.createElement('div');sec.className='grp';sec.style.marginBottom='10px';
+    const ids=ZONES.map((z,i)=>z.g===g.k?i+1:0).filter(Boolean);
+    const h=document.createElement('h2');
+    const hb=document.createElement('button');hb.title='Show every '+g.n.toLowerCase()+' zone on the map';
+    hb.innerHTML='<span class="chip" style="background:'+g.col+'"></span>'+esc(g.n);
+    hb.onclick=()=>pin({ids,group:g});
+    hb.onmouseenter=()=>{hoverSet=new Set(ids);paint()};hb.onmouseleave=()=>{hoverSet=null;paint()};
+    h.appendChild(hb);sec.appendChild(h);
+    for(const id of ids){
+      const z=ZONES[id-1];
+      const b=document.createElement('button');b.className='row';b.dataset.z=id;
+      b.innerHTML='<span class="chip"></span><span class="code">'+esc(z.c)+'</span><span class="nm">'+esc(z.n)+(z.by.startsWith('Smart')||z.c==='CS-FW'?'<span class="sp" title="Inside the Central Petaluma Specific Plan area">CPSP</span>':'')+'</span>';
+      b.onclick=()=>pin({ids:[id]});
+      b.onmouseenter=()=>{hoverSet=new Set([id]);paint()};b.onmouseleave=()=>{hoverSet=null;paint()};
+      sec.appendChild(b);
+    }
+    el.appendChild(sec);
+  }
+  const ov=$('ovs');
+  OVERLAYS.forEach((o,i)=>{
+    const l=document.createElement('label');l.title=o.d;
+    l.innerHTML='<input type="checkbox" id="ov_'+o.k+'"><span class="sw" style="color:'+o.col+'"></span>'+esc(o.n);
+    l.querySelector('input').onchange=e=>{e.target.checked?ovOn.add(i):ovOn.delete(i);paintOv()};
+    ov.appendChild(l);
+  });
+  syncLegend();
+}
+function syncLegend(){
+  document.querySelectorAll('.row').forEach(r=>{
+    const id=+r.dataset.z;r.querySelector('.chip').style.background=zcol(ZONES[id-1]);
+    r.classList.toggle('sel',!!pinned&&pinned.ids.length===1&&pinned.ids[0]===id);
+  });
+}
+
+/* ---------- info card ---------- */
+function ovList(bits){return OVERLAYS.filter((o,i)=>bits&(1<<i))}
+function renderCard(){
+  if(!pinned){
+    card.className='card';
+    card.innerHTML='<p class="eyebrow">What is zoned where</p><p style="margin-top:0"><b>Point at the map</b> to see a zone\'s plain name. <b>Click</b> a spot to pin it: this panel fills in the basics and the map fades everything except that zone.</p><p>You can also click any zone in the list below to find it on the map, or switch to <b>7 simple groups</b> for a quieter picture.</p>';
+    return;
+  }
+  card.className='card on';
+  if(pinned.group){
+    const g=pinned.group;
+    card.innerHTML='<p class="eyebrow">Showing a group</p><div class="zhead"><span class="chip" style="background:'+g.col+'"></span><div><p class="zname">'+esc(g.n)+'</p><div class="zcode">'+pinned.ids.map(i=>ZONES[i-1].c).join(' · ')+'</div></div></div><p>Everything else on the map is faded. Click a spot or a zone in the list for specifics.</p><button class="clear" id="clr">Clear selection</button>';
+    $('clr').onclick=()=>pin(null);return;
+  }
+  const z=ZONES[pinned.ids[0]-1],g=G[z.g];
+  let h='<p class="eyebrow">'+(pinned.pt?'Zone at the pinned spot':'Selected zone')+'</p>';
+  h+='<div class="zhead"><span class="chip" style="background:'+zcol(z)+'"></span><div><div class="zcode">'+esc(z.c)+'</div><p class="zname">'+esc(z.n)+'</p></div></div>';
+  h+='<span class="tag">'+esc(g.n)+'</span>'+(z.by.startsWith('Smart')?'<span class="tag">Central Petaluma Specific Plan</span>':'');
+  h+='<p>'+esc(z.s)+'</p><dl>';
+  for(const [a,b] of z.std)h+='<dt>'+esc(a)+'</dt><dd>'+esc(b)+'</dd>';
+  if(pinned.pt&&pinned.pud)h+='<dt>District name</dt><dd><b>'+esc(PUDN[pinned.pud-1][0])+'</b><br><span class="sm">From the City\'s current zoning layer (2008 ordinance).</span></dd>';
+  if(pinned.pt&&pinned.gp){const u=z.g==='pd'?GPU[pinned.gp-1]:'';
+    h+='<dt>General Plan here</dt><dd><b>'+esc(GPN[pinned.gp-1])+'</b>'+(u?'<br><span class="sm">Outside a planned district, this designation is zoned '+esc(u)+'.</span>':'')+'</dd>';}
+  else h+='<dt>General Plan</dt><dd>'+esc(z.g==='pd'?'Varies by location. Click a spot inside the district to see it.':z.gp)+'</dd>';
+  if(z.was)h+='<dt>Formerly</dt><dd>'+esc(z.was)+'</dd>';
+  h+='<dt>Rules live in</dt><dd>'+esc(z.by)+'</dd>';
+  h+='<dt>Share of map</dt><dd>about '+(z.pct<0.1?'under 0.1':z.pct.toFixed(1))+'% of zoned land</dd></dl>';
+  if(z.note)h+='<div class="note">'+esc(z.note)+'</div>';
+  if(pinned.pt){
+    const ol=ovList(pinned.ov);
+    if(ol.length)h+='<div class="ovhere"><b>Overlays at this spot</b>'+ol.map(o=>esc(o.short)).join(' · ')+'<br>'+esc(ol[0].d)+'</div>';
+  }
+  h+='<div class="ref">Exhibit B: '+esc(z.ref)+'</div><button class="clear" id="clr">Clear selection</button>';
+  card.innerHTML=h;$('clr').onclick=()=>pin(null);
+}
+function pin(p){
+  pinned=p&&p.ids&&p.ids.length?p:null;
+  renderCard();syncLegend();paint();drawPin();
+  if(pinned&&window.matchMedia('(max-width:860px)').matches&&pinned.pt)card.scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+
+/* ---------- canvases ---------- */
+const sctx=$('shade').getContext('2d'),octx=$('ovc').getContext('2d');
+const rgba=(hex,a)=>{const n=parseInt(hex.slice(1),16);return ((a&255)<<24|(n&255)<<16|(n>>8&255)<<8|(n>>16&255))>>>0};
+function paint(){
+  if(!Z)return;
+  const hl=hoverSet||(pinned?new Set(pinned.ids):null);
+  if(!hl&&!simple){sctx.clearRect(0,0,GW,GH);return}
+  const VEIL=rgba('#ffffff',hl?196:0),lut=new Uint32Array(ZONES.length+1);
+  lut[0]=hl?VEIL:0;
+  ZONES.forEach((z,i)=>{const id=i+1;lut[id]=(hl&&!hl.has(id))?VEIL:(simple?rgba(G[z.g].col,255):0)});
+  const img=sctx.createImageData(GW,GH),u=new Uint32Array(img.data.buffer);
+  for(let i=0;i<u.length;i++)u[i]=lut[Z[i]];
+  sctx.putImageData(img,0,0);
+}
+function paintOv(){
+  octx.clearRect(0,0,GW,GH);
+  if(!O||!ovOn.size)return;
+  const img=octx.createImageData(GW,GH),u=new Uint32Array(img.data.buffer);
+  const line=OVERLAYS.map(o=>rgba(o.col,235)),fill=OVERLAYS.map(o=>rgba(o.col,46));
+  let mask=0;ovOn.forEach(i=>mask|=1<<i);
+  for(let y=1;y<GH-1;y++)for(let x=1;x<GW-1;x++){
+    const i=y*GW+x,b=O[i]&mask;if(!b)continue;
+    for(let j=5;j>=0;j--){
+      if(!(b&(1<<j)))continue;
+      const m=1<<j,edge=!(O[i-1]&m)||!(O[i+1]&m)||!(O[i-GW]&m)||!(O[i+GW]&m);
+      const hatch=(j%2?(x-y):(x+y))%5===0;
+      u[i]=(edge||hatch)?line[j]:fill[j];break;
+    }
+  }
+  octx.putImageData(img,0,0);
+}
+
+/* ---------- labels ---------- */
+const NS='http://www.w3.org/2000/svg',lblEls=[];
+let pinEl=null;
+function buildLabels(){
+  const sb=document.createElementNS(NS,'path');sb.setAttribute('d','M560 2420h453.2M560 2408v24M786.6 2413v14M1013.2 2408v24');
+  sb.setAttribute('style','fill:none;stroke:#18222d;stroke-width:2;vector-effect:non-scaling-stroke');svg.appendChild(sb);
+  for(const L of LABELS){
+    const g=document.createElementNS(NS,'g');
+    if(L.kind==='shield'){
+      g.setAttribute('class','shield');
+      g.innerHTML='<rect x="-12" y="-9" width="24" height="18" rx="5"></rect><text>101</text>';
+    }else if(L.kind==='north'){
+      g.innerHTML='<path d="M0 -30 L7 -8 L0 -13 L-7 -8 Z" fill="#18222d"></path><text class="lbl scale">N</text>';
+    }else{
+      const t=document.createElementNS(NS,'text');t.setAttribute('class','lbl '+(L.kind||''));t.textContent=L.t;g.appendChild(t);
+    }
+    svg.appendChild(g);lblEls.push([g,L]);
+  }
+  pinEl=document.createElementNS(NS,'g');pinEl.setAttribute('class','pin');pinEl.innerHTML='<circle r="9"></circle><circle r="9"></circle>';pinEl.style.display='none';svg.appendChild(pinEl);
+}
+function layoutLabels(){
+  const s=1/k;
+  for(const [g,L] of lblEls){
+    const lv=L.lvl||0,show=lv===0||(lv===1&&k>=0.24)||(lv===2&&k>=0.42);
+    g.style.display=show?'':'none';
+    g.setAttribute('transform','translate('+L.x+' '+L.y+') rotate('+(L.a||0)+') scale('+s+')');
+  }
+  drawPin();
+}
+function drawPin(){
+  if(!pinEl)return;
+  if(pinned&&pinned.pt){pinEl.style.display='';pinEl.setAttribute('transform','translate('+pinned.pt[0]+' '+pinned.pt[1]+') scale('+(1/k)+')')}
+  else pinEl.style.display='none';
+}
+
+/* ---------- view ---------- */
+function apply(){stage.style.transform='translate('+tx+'px,'+ty+'px) scale('+k+')';layoutLabels()}
+function clampView(){
+  const r=map.getBoundingClientRect(),m=80;
+  tx=Math.min(r.width-m-BBOX[0]*k,Math.max(m-BBOX[2]*k,tx));
+  ty=Math.min(r.height-m-BBOX[1]*k,Math.max(m-BBOX[3]*k,ty));
+}
+function fit(){
+  const r=map.getBoundingClientRect();if(!r.width)return;
+  const bw=BBOX[2]-BBOX[0],bh=BBOX[3]-BBOX[1];
+  kFit=k=Math.min(r.width/bw,r.height/bh);
+  tx=(r.width-bw*k)/2-BBOX[0]*k;ty=(r.height-bh*k)/2-BBOX[1]*k;apply();
+}
+function zoomAt(cx,cy,f){
+  const nk=Math.min(6,Math.max(kFit*0.8,k*f));
+  const mx=(cx-tx)/k,my=(cy-ty)/k;k=nk;tx=cx-mx*k;ty=cy-my*k;clampView();apply();
+}
+function lookup(cx,cy){
+  const mx=(cx-tx)/k,my=(cy-ty)/k,gx=Math.floor(mx/2),gy=Math.floor(my/2);
+  if(!Z||gx<0||gy<0||gx>=GW||gy>=GH)return null;
+  let z=Z[gy*GW+gx],bx=gx,by=gy;
+  if(!z){
+    let best=99;
+    for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){
+      const x=gx+dx,y=gy+dy;if(x<0||y<0||x>=GW||y>=GH)continue;
+      const v=Z[y*GW+x],d=dx*dx+dy*dy;if(v&&d<best){best=d;z=v;bx=x;by=y}
+    }
+  }
+  if(!z)return null;
+  const ci=by*GW+bx;return{z,ov:O[ci]|O[gy*GW+gx],pt:[mx,my],gp:GPg?GPg[ci]:0,pud:(PUg&&PD.has(z))?PUg[ci]:0};
+}
+const pts=new Map();let drag=null,pinch=null,moved=false;
+const local=e=>{const r=map.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top]};
+map.addEventListener('pointerdown',e=>{
+  map.setPointerCapture(e.pointerId);pts.set(e.pointerId,local(e));touched=true;$('hint').style.display='none';
+  if(pts.size===1){drag={p:local(e),tx,ty};moved=false}
+  else if(pts.size===2){const[a,b]=[...pts.values()];pinch={d:Math.hypot(a[0]-b[0],a[1]-b[1]),k,c:[(a[0]+b[0])/2,(a[1]+b[1])/2],tx,ty};moved=true;drag=null}
+});
+map.addEventListener('pointermove',e=>{
+  const p=local(e);
+  if(pts.has(e.pointerId))pts.set(e.pointerId,p);
+  if(pinch&&pts.size===2){
+    const[a,b]=[...pts.values()],d=Math.hypot(a[0]-b[0],a[1]-b[1]),c=[(a[0]+b[0])/2,(a[1]+b[1])/2];
+    const nk=Math.min(6,Math.max(kFit*0.8,pinch.k*d/pinch.d));
+    const mx=(pinch.c[0]-pinch.tx)/pinch.k,my=(pinch.c[1]-pinch.ty)/pinch.k;
+    k=nk;tx=c[0]-mx*k;ty=c[1]-my*k;clampView();apply();hideTip();return;
+  }
+  if(drag&&pts.size===1){
+    const dx=p[0]-drag.p[0],dy=p[1]-drag.p[1];
+    if(!moved&&Math.hypot(dx,dy)>5){moved=true;map.classList.add('dragging');hideTip()}
+    if(moved){tx=drag.tx+dx;ty=drag.ty+dy;clampView();apply()}
+    return;
+  }
+  if(e.pointerType==='mouse')hover(p);
+});
+function endPtr(e){
+  const had=pts.has(e.pointerId);pts.delete(e.pointerId);
+  if(pts.size<2)pinch=null;
+  if(pts.size===1){const p=[...pts.values()][0];drag={p,tx,ty};moved=true}
+  if(pts.size===0){
+    map.classList.remove('dragging');
+    if(had&&!moved&&e.type==='pointerup'){
+      const hit=lookup(...local(e));
+      if(hit&&!(pinned&&pinned.pt&&pinned.ids[0]===hit.z&&Math.hypot(pinned.pt[0]-hit.pt[0],pinned.pt[1]-hit.pt[1])*k<8))pin({ids:[hit.z],pt:hit.pt,ov:hit.ov,gp:hit.gp,pud:hit.pud});
+      else pin(null);
+    }
+    drag=null;
+  }
+}
+map.addEventListener('pointerup',endPtr);map.addEventListener('pointercancel',endPtr);
+map.addEventListener('pointerleave',()=>{hideTip();hot(0)});
+map.addEventListener('wheel',e=>{e.preventDefault();touched=true;$('hint').style.display='none';const p=local(e);zoomAt(p[0],p[1],Math.exp(-e.deltaY*(e.ctrlKey?0.012:0.0018)));hover(p)},{passive:false});
+map.addEventListener('keydown',e=>{
+  const r=map.getBoundingClientRect(),c=[r.width/2,r.height/2],s=60;
+  if(e.key==='+'||e.key==='=')zoomAt(c[0],c[1],1.3);else if(e.key==='-')zoomAt(c[0],c[1],1/1.3);
+  else if(e.key==='ArrowLeft'){tx+=s}else if(e.key==='ArrowRight'){tx-=s}else if(e.key==='ArrowUp'){ty+=s}else if(e.key==='ArrowDown'){ty-=s}
+  else if(e.key==='Escape'){pin(null);return}else return;
+  e.preventDefault();clampView();apply();
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')pin(null)});
+const ctr=()=>{const r=map.getBoundingClientRect();return[r.width/2,r.height/2]};
+$('zin').onclick=()=>{touched=true;zoomAt(...ctr(),1.5)};
+$('zout').onclick=()=>{zoomAt(...ctr(),1/1.5)};
+$('zfit').onclick=()=>{touched=false;fit()};
+new ResizeObserver(()=>{if(!touched)fit();else{clampView();apply()}}).observe(map);
+
+/* ---------- hover tip ---------- */
+let hotId=0;
+function hot(id){
+  if(id===hotId)return;hotId=id;
+  document.querySelectorAll('.row.hot').forEach(r=>r.classList.remove('hot'));
+  if(id){const r=document.querySelector('.row[data-z="'+id+'"]');if(r)r.classList.add('hot')}
+}
+function hideTip(){tip.style.display='none'}
+function hover(p){
+  const hit=lookup(p[0],p[1]);
+  if(!hit){hideTip();hot(0);return}
+  const z=ZONES[hit.z-1],ol=ovList(hit.ov);
+  tip.innerHTML='<div class="t1"><span class="chip" style="background:'+zcol(z)+'"></span><span>'+esc(z.n)+'</span></div><div class="t2"><span style="font-family:var(--mono);font-weight:600">'+esc(z.c)+'</span> · '+esc(G[z.g].n)+'</div><div class="t2">'+esc(z.s)+'</div>'+(hit.pud?'<div class="t3 gp">'+esc(PUDN[hit.pud-1][0])+'</div>':'')+((hit.gp&&PD.has(hit.z))?'<div class="t3 gp">General Plan land use here: '+esc(GPN[hit.gp-1])+'</div>':'')+(ol.length?'<div class="t3">Also here: '+ol.map(o=>esc(o.short)).join(', ')+'</div>':'')+'<div class="t4">Click to pin</div>';
+  tip.style.display='block';
+  const r=map.getBoundingClientRect(),tw=tip.offsetWidth,th=tip.offsetHeight;
+  let x=p[0]+16,y=p[1]+16;if(x+tw>r.width-8)x=p[0]-tw-12;if(y+th>r.height-8)y=p[1]-th-12;
+  tip.style.left=Math.max(8,x)+'px';tip.style.top=Math.max(8,y)+'px';hot(hit.z);
+}
+
+/* ---------- mode ---------- */
+function setMode(s){simple=s;$('modeAll').setAttribute('aria-pressed',!s);$('modeSimple').setAttribute('aria-pressed',s);syncLegend();renderCard();paint()}
+$('modeAll').onclick=()=>setMode(false);$('modeSimple').onclick=()=>setMode(true);
+
+const about=$('about');$('aboutBtn').onclick=()=>{try{about.showModal()}catch(e){about.setAttribute('open','')}};$('aboutClose').onclick=()=>about.close();about.addEventListener('click',e=>{if(e.target===about)about.close()});
+/* ---------- boot ---------- */
+buildLegend();buildLabels();renderCard();fit();
+const base=$('base');base.onload=()=>{$('loading').style.display='none'};base.src='__BASE__';
+const gi=new Image();
+gi.onload=()=>{
+  const c=document.createElement('canvas');c.width=GW;c.height=GH;const x=c.getContext('2d',{willReadFrequently:true});
+  x.drawImage(gi,0,0);const d=x.getImageData(0,0,GW,GH).data;
+  Z=new Uint8Array(GW*GH);O=new Uint8Array(GW*GH);
+  for(let i=0,j=0;i<Z.length;i++,j+=4){Z[i]=Math.round(d[j]/6);O[i]=Math.round(d[j+1]/4)}
+  paint();paintOv();
+};
+gi.src='__GRID__';
+const gpi=new Image();
+gpi.onload=()=>{const c=document.createElement('canvas');c.width=GW;c.height=GH;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(gpi,0,0);const d=x.getImageData(0,0,GW,GH).data;GPg=new Uint8Array(GW*GH);PUg=new Uint8Array(GW*GH);for(let i=0,j=0;i<GPg.length;i++,j+=4){GPg[i]=Math.round(d[j]/7);PUg[i]=d[j+1]}};
+gpi.src='__GP__';
+</script>
+</body>
+</html>
